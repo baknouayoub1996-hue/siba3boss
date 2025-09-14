@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BOSS SIBA3 SIBA3</title>
+  <style>
+    
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ff5a7a;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{margin:0;background:linear-gradient(180deg,#071021 0%, #071827 60%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background-image: url(photos/moussaoui.png);
+    background-repeat: no-repeat;
+    background-position: center; background-attachment: fixed; background-size: cover;}
+    .wrap{width:100%;max-width:920px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ff8aa2);display:flex;align-items:center;justify-content:center;font-weight:700;background-image: url(photos/logoSIBA3.png);}
+    h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .row{display:flex;gap:12px;align-items:center}
+    input[type=number]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .small{width:110px}
+    .values{display:flex;gap:10px;margin-bottom:12px}
+    .stat{background:var(--glass);padding:12px;border-radius:10px;flex:1}
+    .big{font-size:20px;font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    button{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:#071021;font-weight:700;cursor:pointer}
+    footer{margin-top:12px;color:var(--muted);font-size:13px}
+    .right .card{position:sticky;top:18px}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    .small-btn{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit;cursor:pointer}
+    .tiny{font-size:12px;padding:6px 8px}
+    .notice{font-size:12px;color:#ffdede;background:rgba(255,80,80,0.04);padding:8px;border-radius:8px;margin-bottom:10px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr;}.right .card{position:static}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">SIBA3</div>
+      <div>
+        <h1>BOSS SIBA3 SIBA3</h1>
+        
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card left">
+        <div class="notice">This is a clone for learning or legitimate bookkeeping only. Use responsibly.</div>
+
+        <div>
+          <label>Denominations (editable)</label>
+          <div class="values" style="margin-bottom:14px">
+            <div style="flex:1">
+              <label class="muted">SALAMON (×)</label>
+              <input id="count500" type="number" min="0" value="0" />
+              <div class="muted" style="font-size:12px;margin-top:6px">Value per unit SALAMON: <input id="val500" class="small" type="number" min="0" value="500" /></div>
+            </div>
+            <div style="flex:1">
+              <label class="muted">DAR3I (×)</label>
+              <input id="count100" type="number" min="0" value="0" />
+              <div class="muted" style="font-size:12px;margin-top:6px">Value per unit DAR3I: <input id="val900" class="small" type="number" min="0" value="900" /></div>
+            </div>
+      
+          </div>
+
+          
+
+          <div class="row" style="margin-top:6px">
+            <button id="calc">Calculate</button>
+            
+          </div>
+
+          <div style="margin-top:12px" id="results">
+            <div class="stat"><div class="muted">Total amount</div><div id="total" class="big">0</div></div>
+            <div style="height:12px"></div>
+            
+          </div>
+
+          <footer>
+            
+          </footer>
+        </div>
+      </section>
+
+      
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // helpers
+    const getEl = id => document.getElementById(id);
+    const $ = id => getEl(id); // legacy alias
+    function fmt(n){return Number(n).toLocaleString(undefined,{maximumFractionDigits:2})}
+
+    // safe number getter to avoid "reading 'value' of null" errors
+    function getNumber(id, fallback=0){
+      const el = getEl(id);
+      if(!el){
+        console.warn(`Element #${id} not found — using fallback ${fallback}`);
+        return Number(fallback);
+      }
+      return Number(el.value || 0);
+    }
+
+    // convenient binder that guards missing elements
+    function bind(id, event, handler){
+      const el = getEl(id);
+      if(!el){ console.warn(`Cannot bind event ${event} to #${id} — element not found.`); return; }
+      el.addEventListener(event, handler);
+    }
+
+    // compute
+    function compute(){
+      const c500 = getNumber('count500',0);
+      const c100 = getNumber('count100',0);
+      const c1 = getNumber('count1',0);
+      const v500 = getNumber('val500',500);
+      const v100 = getNumber('val100',900);
+      const v1 = getNumber('val1',1);
+      const commissionPct = getNumber('commission',20)/100;
+      const familyPct = getNumber('familyShare',10)/100;
+
+      const total = c500 * v500 + c100 * v100 + c1 * v1;
+      const commissionVal = total * commissionPct;
+      const afterCommission = total - commissionVal;
+      const familyVal = afterCommission * familyPct;
+      const net = afterCommission - familyVal;
+
+      const totalEl = getEl('total'); if(totalEl) totalEl.textContent = fmt(total);
+      const commissionEl = getEl('commissionVal'); if(commissionEl) commissionEl.textContent = fmt(commissionVal);
+      const familyEl = getEl('familyVal'); if(familyEl) familyEl.textContent = fmt(familyVal);
+      const netEl = getEl('net'); if(netEl) netEl.textContent = fmt(net);
+
+      return {total,commissionVal,afterCommission,familyVal,net};
+    }
+
+    // daily storage
+    const keyDate = 'mrY_daily_date';
+    const keyTotal = 'mrY_daily_total';
+
+    function getStored(){
+      const d = localStorage.getItem(keyDate);
+      const t = Number(localStorage.getItem(keyTotal) || 0);
+      return {date: d, total: t};
+    }
+
+    function setStored(dateStr,total){
+      localStorage.setItem(keyDate,dateStr);
+      localStorage.setItem(keyTotal,String(total));
+      renderDaily();
+    }
+
+    function startOfLocalDayISO(d=new Date()){
+      const y=d.getFullYear(), m=d.getMonth(), day=d.getDate();
+      const s=new Date(y,m,day,0,0,0,0);
+      return s.toISOString().slice(0,10);
+    }
+
+    function ensureToday(){
+      const today = startOfLocalDayISO();
+      const stored = getStored();
+      if(stored.date !== today){
+        setStored(today,0);
+      }
+    }
+
+    function renderDaily(){
+      const stored = getStored();
+      const dailyEl = getEl('dailyTotal'); if(dailyEl) dailyEl.textContent = fmt(stored.total || 0);
+      const sinceEl = getEl('since'); if(sinceEl) sinceEl.textContent = stored.date ? `Date: ${stored.date}` : '';
+    }
+
+    function addToDaily(amount){
+      ensureToday();
+      const stored = getStored();
+      const newTotal = Number((stored.total || 0) + Number(amount || 0));
+      setStored(startOfLocalDayISO(), newTotal);
+    }
+
+    function clearStorage(){
+      localStorage.removeItem(keyDate);
+      localStorage.removeItem(keyTotal);
+      ensureToday();
+      renderDaily();
+    }
+
+    // countdown to midnight local
+    function secondsToMidnight(){
+      const now=new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1,0,0,0);
+      return Math.floor((tomorrow - now)/1000);
+    }
+
+    function pad(n){return String(n).padStart(2,'0')}
+    function renderCountdown(){
+      let s=secondsToMidnight();
+      const h=Math.floor(s/3600); s%=3600; const m=Math.floor(s/60); const sec=s%60;
+      const cd = getEl('countdown'); if(cd) cd.textContent = `${pad(h)}:${pad(m)}:${pad(sec)}`;
+    }
+
+    // safe event bindings
+    bind('calc','click',()=>{ compute(); });
+    bind('addDaily','click',()=>{ const res = compute(); addToDaily(res.net); renderDaily(); });
+    bind('resetDaily','click',()=>{ clearStorage(); });
+    bind('addManual','click',()=>{ const n = prompt('Enter amount to add to daily:'); const v = Number(n||0); if(!isNaN(v)) addToDaily(v); });
+    bind('clearStorage','click',()=>{ if(confirm('Clear saved daily data?')) clearStorage(); });
+    bind('export','click',()=>{ const st = getStored(); const csv = 'date,total\n' + (st.date||'') + ',' + (st.total||0) + '\n'; const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='mr-y-daily.csv'; a.click(); URL.revokeObjectURL(url); });
+
+    // Demo test: prefill fields and compute, helpful as a test case
+    bind('runDemo','click',()=>{
+      const elCount500 = getEl('count500'); if(elCount500) elCount500.value = 3;
+      const elCount100 = getEl('count100'); if(elCount100) elCount100.value = 7;
+      const elCount1 = getEl('count1'); if(elCount1) elCount1.value = 25;
+      const elVal500 = getEl('val500'); if(elVal500) elVal500.value = 500;
+      const elVal100 = getEl('val100'); if(elVal100) elVal100.value = 100;
+      const elVal1 = getEl('val1'); if(elVal1) elVal1.value = 1;
+      compute();
+      alert('Demo run: fields filled and computed. Check totals on the right.');
+    });
+
+    // init
+    ensureToday(); renderDaily(); renderCountdown();
+    setInterval(renderCountdown,1000);
+
+    // quick sanity log so errors are easier to spot in console
+    console.info('MR Y clone initialized — elements present:', {
+      count500: !!getEl('count500'), val500: !!getEl('val500'), count100: !!getEl('count100'), val100: !!getEl('val100'),
+      count1: !!getEl('count1'), val1: !!getEl('val1'), calc: !!getEl('calc')
+    });
+  </script>
+</body>
+</html>
